@@ -1,0 +1,54 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "71422eec6c3bdb45163a7265c4b96c7d",
+    "packages": [
+        {
+            "name": "lizhibin/douniu-game",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lizhibin205/douniu-game.git",
+                "reference": "e6ec84ac945922809dc860539ff6bec0bf3b6bd3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://files.phpcomposer.com/files/lizhibin205/douniu-game/e6ec84ac945922809dc860539ff6bec0bf3b6bd3.zip",
+                "reference": "e6ec84ac945922809dc860539ff6bec0bf3b6bd3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BGame\\Douniu\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "lizhibin"
+                }
+            ],
+            "description": "douniu-game",
+            "time": "2017-10-20 10:06:14"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "lizhibin/douniu-game": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": ">=5.5.9"
+    },
+    "platform-dev": []
+}
