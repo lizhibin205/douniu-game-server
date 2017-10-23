@@ -11,32 +11,35 @@ if (PHP_OS == 'WINNT') {
 }
 require PROJECT_ROOT . '/vendor/autoload.php';
 
+$gameServer = BGameServer\Douniu\GameServer::getInstance();
 $websocketWorker = new Worker('websocket://0.0.0.0:9501');
 // 启动1个进程对外提供服务，使用非共享内存
-$http_worker->count = 1;
+$websocketWorker->count = 1;
+
+//on-onWorkerStart 
+$websocketWorker->onWorkerStart = function ($worker) use ($gameServer)
+{
+    $gameServer->startZhuangTimer();
+};
 
 //on-connect
-$websocketWorker->onConnect = function ($connection)  {
-    
+$websocketWorker->onConnect = function ($connection) use($gameServer) {
+    $gameServer->onConnect($connection);
 };
 
 //on-message
-$worker->onMessage = function($connection, $data)
-{
-    var_dump($data);
-    $connection->send('receive success');
+$websocketWorker->onMessage = function($connection, $data) use($gameServer) {
+    $gameServer->onMessage($connection, $data);
 };
 
 //on-close
-$worker->onClose = function($connection)
-{
-    echo "connection closed\n";
+$websocketWorker->onClose = function($connection)  use($gameServer) {
+    $gameServer->onClose($connection);
 };
 
 //on-error
-$worker->onError = function($connection, $code, $msg)
-{
-    echo "error $code $msg\n";
+$websocketWorker->onError = function($connection, $code, $msg)  use($gameServer) {
+    $gameServer->onError($connection, $code, $msg);
 };
 
 Worker::runAll();

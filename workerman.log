@@ -1,0 +1,14 @@
+2017-10-21 07:46:31 exception 'Exception' with message 'You can't send(array) to client, you need to convert it to a string. ' in D:\www\douniu-game-server\workerman-for-win-master\Protocols\Websocket.php:225
+Stack trace:
+#0 D:\www\douniu-game-server\workerman-for-win-master\Connection\TcpConnection.php(313): Workerman\Protocols\Websocket::encode(Array, Object(Workerman\Connection\TcpConnection))
+#1 D:\www\douniu-game-server\game-server\GameServer.php(30): Workerman\Connection\TcpConnection->send(Array)
+#2 D:\www\douniu-game-server\game.php(27): BGameServer\Douniu\GameServer->onMessage(Object(Workerman\Connection\TcpConnection), '{"command":"roo...')
+#3 [internal function]: {closure}(Object(Workerman\Connection\TcpConnection), '{"command":"roo...')
+#4 D:\www\douniu-game-server\workerman-for-win-master\Connection\TcpConnection.php(632): call_user_func(Object(Closure), Object(Workerman\Connection\TcpConnection), '{"command":"roo...')
+#5 [internal function]: Workerman\Connection\TcpConnection->baseRead(Resource id #22)
+#6 D:\www\douniu-game-server\workerman-for-win-master\Events\Select.php(286): call_user_func_array(Array, Array)
+#7 D:\www\douniu-game-server\workerman-for-win-master\Worker.php(856): Workerman\Events\Select->loop()
+#8 D:\www\douniu-game-server\workerman-for-win-master\Worker.php(473): Workerman\Worker->run()
+#9 D:\www\douniu-game-server\workerman-for-win-master\Worker.php(382): Workerman\Worker::runAllWorkers()
+#10 D:\www\douniu-game-server\game.php(40): Workerman\Worker::runAll()
+#11 {main}
