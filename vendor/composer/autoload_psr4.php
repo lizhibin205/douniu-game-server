@@ -7,5 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'BGame\\Douniu\\' => array($vendorDir . '/lizhibin/douniu-game/lib'),
+    'BGame\\Base\\' => array($vendorDir . '/lizhibin/douniu-game/base'),
     'BGameServer\\Douniu\\' => array($baseDir . '/game-server'),
 );

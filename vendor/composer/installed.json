@@ -6,23 +6,24 @@
         "source": {
             "type": "git",
             "url": "https://github.com/lizhibin205/douniu-game.git",
-            "reference": "c32857d6cccae8c3d3c08407ca940ef62921f5cc"
+            "reference": "bbd961ce263eccb55b98419f081cbdf1ebd00834"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/lizhibin205/douniu-game/c32857d6cccae8c3d3c08407ca940ef62921f5cc.zip",
-            "reference": "c32857d6cccae8c3d3c08407ca940ef62921f5cc",
+            "url": "https://files.phpcomposer.com/files/lizhibin205/douniu-game/bbd961ce263eccb55b98419f081cbdf1ebd00834.zip",
+            "reference": "bbd961ce263eccb55b98419f081cbdf1ebd00834",
             "shasum": ""
         },
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2017-10-20T15:01:40+00:00",
+        "time": "2017-10-25T12:37:25+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
             "psr-4": {
-                "BGame\\Douniu\\": "lib/"
+                "BGame\\Douniu\\": "lib/",
+                "BGame\\Base\\": "base/"
             }
         },
         "notification-url": "https://packagist.org/downloads/",

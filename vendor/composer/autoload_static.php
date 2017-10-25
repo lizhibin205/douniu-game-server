@@ -10,6 +10,7 @@ class ComposerStaticInitb6016b4213141ca5fc9252b0672019cc
         'B' => 
         array (
             'BGame\\Douniu\\' => 13,
+            'BGame\\Base\\' => 11,
             'BGameServer\\Douniu\\' => 19,
         ),
     );
@@ -18,6 +19,10 @@ class ComposerStaticInitb6016b4213141ca5fc9252b0672019cc
         'BGame\\Douniu\\' => 
         array (
             0 => __DIR__ . '/..' . '/lizhibin/douniu-game/lib',
+        ),
+        'BGame\\Base\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/lizhibin/douniu-game/base',
         ),
         'BGameServer\\Douniu\\' => 
         array (
