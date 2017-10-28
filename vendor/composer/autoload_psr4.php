@@ -6,7 +6,8 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'BGame\\Douniu\\' => array($vendorDir . '/lizhibin/douniu-game/lib'),
+    'BGame\\ZhaJinHua\\' => array($vendorDir . '/lizhibin/douniu-game/zhajinhua'),
+    'BGame\\Douniu\\' => array($vendorDir . '/lizhibin/douniu-game/douniu'),
     'BGame\\Base\\' => array($vendorDir . '/lizhibin/douniu-game/base'),
     'BGameServer\\Douniu\\' => array($baseDir . '/game-server'),
 );

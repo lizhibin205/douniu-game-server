@@ -9,6 +9,7 @@ class ComposerStaticInitb6016b4213141ca5fc9252b0672019cc
     public static $prefixLengthsPsr4 = array (
         'B' => 
         array (
+            'BGame\\ZhaJinHua\\' => 16,
             'BGame\\Douniu\\' => 13,
             'BGame\\Base\\' => 11,
             'BGameServer\\Douniu\\' => 19,
@@ -16,9 +17,13 @@ class ComposerStaticInitb6016b4213141ca5fc9252b0672019cc
     );
 
     public static $prefixDirsPsr4 = array (
+        'BGame\\ZhaJinHua\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/lizhibin/douniu-game/zhajinhua',
+        ),
         'BGame\\Douniu\\' => 
         array (
-            0 => __DIR__ . '/..' . '/lizhibin/douniu-game/lib',
+            0 => __DIR__ . '/..' . '/lizhibin/douniu-game/douniu',
         ),
         'BGame\\Base\\' => 
         array (

@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/lizhibin205/douniu-game.git",
-                "reference": "bbd961ce263eccb55b98419f081cbdf1ebd00834"
+                "reference": "7d1c854370f2fad2cf740be3797666ff201c92fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://files.phpcomposer.com/files/lizhibin205/douniu-game/bbd961ce263eccb55b98419f081cbdf1ebd00834.zip",
-                "reference": "bbd961ce263eccb55b98419f081cbdf1ebd00834",
+                "url": "https://files.phpcomposer.com/files/lizhibin205/douniu-game/7d1c854370f2fad2cf740be3797666ff201c92fb.zip",
+                "reference": "7d1c854370f2fad2cf740be3797666ff201c92fb",
                 "shasum": ""
             },
             "require": {
@@ -26,8 +26,9 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "BGame\\Douniu\\": "lib/",
-                    "BGame\\Base\\": "base/"
+                    "BGame\\Douniu\\": "douniu/",
+                    "BGame\\Base\\": "base/",
+                    "BGame\\ZhaJinHua\\": "zhajinhua/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -37,7 +38,7 @@
                 }
             ],
             "description": "douniu-game",
-            "time": "2017-10-25 12:37:25"
+            "time": "2017-10-28 06:40:11"
         }
     ],
     "packages-dev": [],
