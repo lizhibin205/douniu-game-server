@@ -82,6 +82,16 @@ class GameServer
         }
     }
     //叫庄处理结束
+    //gc处理
+    public function startGcTimer()
+    {
+        Timer::add(300, [$this, 'doGcHandle']);
+    }
+    public function doGcHandle()
+    {
+        Room::gc();
+    }
+    //gc结束
 
     protected function callCommand($connection, $command, $action, $data)
     {

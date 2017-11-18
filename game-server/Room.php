@@ -34,19 +34,23 @@ class Room extends Command
             'create_time' => time(),//房间创建时间，
             'create_mid' => $mid,//创建房间的人
             'zhuang_calling' => [],//叫庄玩家的mid列表
+            'create_time' => time(),//房间创建时间
+            'max_time' => 0,//可玩的局数
+            'current_time' => 1,//当期局数
         ];
         self::$roomList[$roomId]['connection_ids'][$mid] = $this->getConnectId();
         self::$roomList[$roomId]['players_info'][$mid] = [
             'name' => empty($this->data['name']) ? '' : $this->data['name'],
             'avatar' => empty($this->data['avatar']) ? '' : $this->data['avatar'],
         ];
+        self::$roomList[$roomId]['max_time'] = empty($this->data['max_time']) ? 1 : intval($this->data['max_time']);
         return $this->reply([
             'event' => 'create_room',
             'create_mid' => self::$roomList[$roomId]['create_mid'],
             'game_status' => self::$roomList[$roomId]['status'],
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
             'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_status' => array_keys(self::$roomList[$roomId]['ready_status']),
+            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
         ]);
     }
 
@@ -77,7 +81,7 @@ class Room extends Command
             'game_status' => self::$roomList[$roomId]['status'],
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
             'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_status' => array_keys(self::$roomList[$roomId]['ready_status']),
+            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
         ], self::$roomList[$roomId]['connection_ids']);
     }
 
@@ -195,7 +199,7 @@ class Room extends Command
             throw new \Exception("game is not start");
         }
 
-        if (in_array($mid, self::$roomList[$roomId]['zhuang_calling'])) {
+        if (!in_array($mid, self::$roomList[$roomId]['zhuang_calling'])) {
             self::$roomList[$roomId]['zhuang_calling'][] = $mid;
         }
 
@@ -305,5 +309,20 @@ class Room extends Command
         $random = mt_rand(0, count($players) - 1);
         self::$roomList[$roomId]['zhuang'] = $players[$random];
         return self::$roomList[$roomId]['zhuang'];
+    }
+
+    /**
+     * 回收Room内存数据
+     * return void
+     */
+    public static function gc()
+    {
+        $now = time();
+        //回收6小时前创建的房间
+        foreach (self::$roomList as $roomKey => $room) {
+            if ($now - $room['create_time'] > 3600 * 6) {
+                unset(self::$roomList[$roomKey]);
+            }
+        }
     }
 }
