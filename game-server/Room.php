@@ -106,6 +106,7 @@ class Room extends Command
             'create_mid' => self::$roomList[$roomId]['create_mid'],
             'game_status' => self::$roomList[$roomId]['status'],
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
+            'players_info' => self::$roomList[$roomId]['players_info'],
             'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
         ], self::$roomList[$roomId]['connection_ids']);
     }
