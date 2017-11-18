@@ -3,7 +3,7 @@ namespace BGameServer\Douniu;
 
 class CallZhuangHandle
 {
-    const TIME_OUT = 20;
+    const TIME_OUT = 60;
     private $midConnections = [];
     private $beginTime;
     public function __construct($midConnections)
@@ -11,20 +11,26 @@ class CallZhuangHandle
         $this->midConnections = $midConnections;
         $this->beginTime = time();
     }
-    public function doResult()
+    public function doResult($roomId)
     {
         $nowTime = time();
         $diffTime = $nowTime - $this->beginTime;
         //如果所有人都没有叫庄，则抛出异常
-        if ($diffTime > count($this->midConnections) * self::TIME_OUT) {
-            throw new \Exception("Call zhuang timeout");
+        if ($diffTime == self::TIME_OUT) {
+            //决定庄
+            $zhuangMid = Room::decideZhuang($roomId);
+            return [$this->midConnections, [
+                'event' => 'result_zhuang',
+                'zhuang' => $zhuangMid
+            ]];
+        }
+        if ($diffTime > self::TIME_OUT) {
+            throw new \Exception("timeout");
         }
 
         $targetIndex = intval($diffTime / self::TIME_OUT);
-        $slice = array_slice($this->midConnections, $targetIndex, 1);
         return [$this->midConnections, [
             'event' => 'wait_call_zhuang',
-            'target_mid' => isset($slice[0]) ? $slice[0] : null,
             'timeout' => self::TIME_OUT - ($diffTime % self::TIME_OUT)
         ]];
     }

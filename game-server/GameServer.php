@@ -69,7 +69,7 @@ class GameServer
     {
         foreach ($this->zhuangHandleList as $handleKey => $handle) {
             try {
-                list($connectionIds, $return) = $handle->doResult();
+                list($connectionIds, $return) = $handle->doResult($handleKey);
             } catch (\Exception $ex) {
                 $this->removeZhuangHandle($handleKey);
                 continue;
