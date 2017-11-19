@@ -35,6 +35,7 @@ class Room extends Command
             'create_mid' => $mid,//创建房间的人
             'zhuang_calling' => [],//叫庄玩家的mid列表
             'create_time' => time(),//房间创建时间
+            'last_update_time' => time(),//房间最近操作时间
             'max_time' => 0,//可玩的局数
             'current_time' => 1,//当期局数
         ];
@@ -75,6 +76,7 @@ class Room extends Command
             'name' => empty($this->data['name']) ? '' : $this->data['name'],
             'avatar' => empty($this->data['avatar']) ? '' : $this->data['avatar'],
         ];
+        self::$roomList[$roomId]['last_update_time'] = time();
         return $this->reply([
             'event' => 'enter_room',
             'create_mid' => self::$roomList[$roomId]['create_mid'],
@@ -101,6 +103,7 @@ class Room extends Command
         }
 
         self::$roomList[$roomId]['ready_status'][$mid] = 1;
+        self::$roomList[$roomId]['last_update_time'] = time();
         return $this->reply([
             'event' => 'get_ready_status',
             'create_mid' => self::$roomList[$roomId]['create_mid'],
@@ -140,6 +143,7 @@ class Room extends Command
             $game = new Douniu();
             $game->init(array_keys(self::$roomList[$roomId]['connection_ids']));
             self::$roomList[$roomId]['status'] = 1;
+            self::$roomList[$roomId]['last_update_time'] = time();
             self::$roomList[$roomId]['game'] = $game->getResult();
             //设置叫庄计时器
             GameServer::getInstance()->addZhuangHandle($roomId, new CallZhuangHandle(self::$roomList[$roomId]['connection_ids']));
@@ -246,6 +250,7 @@ class Room extends Command
         if (is_null(self::$roomList[$roomId]['zhuang']) || self::$roomList[$roomId]['zhuang'] != $mid) {
             throw new \Exception("you can not open");
         }
+        self::$roomList[$roomId]['last_update_time'] = time();
         return $this->reply([
             'event' => 'game_result',
             'result' => self::$roomList[$roomId]['game']
@@ -267,6 +272,8 @@ class Room extends Command
         if (isset(self::$roomList[$roomId])) {
             throw new \Exception("room exists!");
         }
+
+        self::$roomList[$roomId]['last_update_time'] = time();
 
         return $this->reply([
             'event' => 'chat',
@@ -321,7 +328,7 @@ class Room extends Command
         $now = time();
         //回收6小时前创建的房间
         foreach (self::$roomList as $roomKey => $room) {
-            if ($now - $room['create_time'] > 3600 * 6) {
+            if ($now - $room['last_update_time'] > 3600 * 6) {
                 unset(self::$roomList[$roomKey]);
             }
         }
