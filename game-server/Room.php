@@ -7,8 +7,26 @@ class Room extends Command
 {
     const MIN_ROOM_PLAYER = 2;
     const MAX_ROOM_PLAYER = 9;
+    const ROOM_TOKEN      = 'token123#';
 
     private static $roomList = [];
+
+    /**
+     * __construct
+     * @param unknown $connection
+     * @param unknown $data
+     */
+    public function __construct($connection, $data)
+    {
+        parent::__construct($connection, $data);
+        //验证token
+        $mid   = $this->getMid();
+        $roomId  = empty($this->data['room_id']) ? '' : $this->data['room_id'];
+        $token = empty($this->data['token']) ? '' : $this->data['token'];
+        if ($token != md5($mid . $roomId . self::ROOM_TOKEN)) {
+            //throw new \Exception("mid validation failure");
+        }
+    }
 
     /**
      * 创建房间
@@ -71,6 +89,10 @@ class Room extends Command
             && count(self::$roomList[$roomId]['connection_ids']) >= self::MAX_ROOM_PLAYER) {
             throw new \Exception("room is full");
         }
+        if (self::$roomList[$roomId]['status'] > 0) {
+            throw new \Exception("game is starting");
+        }
+
         self::$roomList[$roomId]['connection_ids'][$mid] = $connectionId;
         self::$roomList[$roomId]['players_info'][$mid] = [
             'name' => empty($this->data['name']) ? '' : $this->data['name'],

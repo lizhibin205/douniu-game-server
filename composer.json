@@ -6,7 +6,8 @@
     ],
     "require": {
         "php":">=5.5.9",
-        "lizhibin/douniu-game":"dev-master"
+        "lizhibin/douniu-game":"dev-master",
+        "react/http-client": "0.5.6"
     },
     "autoload":{
         "psr-4":{
