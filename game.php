@@ -1,5 +1,6 @@
 <?php 
 use Workerman\Worker;
+use BGameServer\Douniu\HttpHelper;
 
 define("PROJECT_ROOT", __DIR__);
 
@@ -20,6 +21,7 @@ $websocketWorker->count = 1;
 $websocketWorker->onWorkerStart = function ($worker) use ($gameServer)
 {
     $gameServer->startZhuangTimer();
+    HttpHelper::getInstance()->init();
 };
 
 //on-connect
@@ -33,7 +35,7 @@ $websocketWorker->onMessage = function($connection, $data) use($gameServer) {
 };
 
 //on-close
-$websocketWorker->onClose = function($connection)  use($gameServer) {
+$websocketWorker->onClose = function($connection) use($gameServer) {
     $gameServer->onClose($connection);
 };
 
