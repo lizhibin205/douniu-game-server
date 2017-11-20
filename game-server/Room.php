@@ -364,6 +364,7 @@ class Room extends Command
         $mid = $this->getMid();
         $chat = empty($this->data['chat']) ? '' : $this->data['chat'];
         $type = empty($this->data['type']) ? '' : $this->data['type'];
+        $name = empty($this->data['name']) ? '' : $this->data['name'];
 
         if (!isset(self::$roomList[$roomId])) {
             throw new \Exception("room exists!");
@@ -376,6 +377,7 @@ class Room extends Command
             'chat_mid' => $mid,
             'chat' => $chat,
             'type' => $type,
+            'name' => $name,
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
             'players_info' => self::$roomList[$roomId]['players_info'],
             'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
