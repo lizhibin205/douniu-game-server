@@ -151,7 +151,7 @@
                 }
             ],
             "description": "douniu-game",
-            "time": "2017-10-28 06:41:38"
+            "time": "2017-10-28T06:41:38+00:00"
         },
         {
             "name": "psr/http-message",
@@ -515,16 +515,16 @@
         },
         {
             "name": "react/stream",
-            "version": "v0.7.4",
+            "version": "v0.7.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/stream.git",
-                "reference": "5c7db5261b3cc7e11b8ba765bed8ba31ee745f5c"
+                "reference": "a41bbffdda5e3f4282012f8e346cef48ecb28b24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://files.phpcomposer.com/files/reactphp/stream/5c7db5261b3cc7e11b8ba765bed8ba31ee745f5c.zip",
-                "reference": "5c7db5261b3cc7e11b8ba765bed8ba31ee745f5c",
+                "url": "https://files.phpcomposer.com/files/reactphp/stream/a41bbffdda5e3f4282012f8e346cef48ecb28b24.zip",
+                "reference": "a41bbffdda5e3f4282012f8e346cef48ecb28b24",
                 "shasum": ""
             },
             "require": {
@@ -534,7 +534,7 @@
             },
             "require-dev": {
                 "clue/stream-filter": "~1.2",
-                "phpunit/phpunit": "^5.0 || ^4.8.10"
+                "phpunit/phpunit": "^6.4 || ^5.7 || ^4.8.35"
             },
             "suggest": {
                 "react/event-loop": "^0.4"
@@ -560,7 +560,7 @@
                 "stream",
                 "writable"
             ],
-            "time": "2017-10-11T17:58:46+00:00"
+            "time": "2017-11-20T11:55:48+00:00"
         }
     ],
     "packages-dev": [],

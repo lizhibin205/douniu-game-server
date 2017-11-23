@@ -22,16 +22,32 @@ class DuplexResourceStreamTest extends TestCase
     /**
      * @covers React\Stream\DuplexResourceStream::__construct
      */
+    public function testConstructorWithExcessiveMode()
+    {
+        // excessive flags are ignored for temp streams, so we have to use a file stream
+        $name = tempnam(sys_get_temp_dir(), 'test');
+        $stream = @fopen($name, 'r+eANYTHING');
+        unlink($name);
+
+        $loop = $this->createLoopMock();
+        $buffer = new DuplexResourceStream($stream, $loop);
+        $buffer->close();
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::__construct
+     * @expectedException InvalidArgumentException
+     */
     public function testConstructorThrowsExceptionOnInvalidStream()
     {
         $loop = $this->createLoopMock();
 
-        $this->setExpectedException('InvalidArgumentException');
         new DuplexResourceStream('breakme', $loop);
     }
 
     /**
      * @covers React\Stream\DuplexResourceStream::__construct
+     * @expectedException InvalidArgumentException
      */
     public function testConstructorThrowsExceptionOnWriteOnlyStream()
     {
@@ -41,12 +57,27 @@ class DuplexResourceStreamTest extends TestCase
 
         $loop = $this->createLoopMock();
 
-        $this->setExpectedException('InvalidArgumentException');
         new DuplexResourceStream(STDOUT, $loop);
     }
 
     /**
      * @covers React\Stream\DuplexResourceStream::__construct
+     * @expectedException InvalidArgumentException
+     */
+    public function testConstructorThrowsExceptionOnWriteOnlyStreamWithExcessiveMode()
+    {
+        // excessive flags are ignored for temp streams, so we have to use a file stream
+        $name = tempnam(sys_get_temp_dir(), 'test');
+        $stream = fopen($name, 'weANYTHING');
+        unlink($name);
+
+        $loop = $this->createLoopMock();
+        new DuplexResourceStream($stream, $loop);
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::__construct
+     * @expectedException RunTimeException
      */
     public function testConstructorThrowsExceptionIfStreamDoesNotSupportNonBlocking()
     {
@@ -57,7 +88,6 @@ class DuplexResourceStreamTest extends TestCase
         $stream = fopen('blocking://test', 'r+');
         $loop = $this->createLoopMock();
 
-        $this->setExpectedException('RuntimeException');
         new DuplexResourceStream($stream, $loop);
     }
 
@@ -242,10 +272,83 @@ class DuplexResourceStreamTest extends TestCase
     {
         $stream = fopen('php://temp', 'r+');
         $loop = $this->createLoopMock();
-        $loop->expects($this->once())->method('removeReadStream');
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+        $loop->expects($this->once())->method('removeReadStream')->with($stream);
 
         $conn = new DuplexResourceStream($stream, $loop);
         $conn->end('bye');
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::pause
+     */
+    public function testPauseRemovesReadStreamFromLoop()
+    {
+        $stream = fopen('php://temp', 'r+');
+        $loop = $this->createLoopMock();
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+        $loop->expects($this->once())->method('removeReadStream')->with($stream);
+
+        $conn = new DuplexResourceStream($stream, $loop);
+        $conn->pause();
+        $conn->pause();
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::pause
+     */
+    public function testResumeDoesAddStreamToLoopOnlyOnce()
+    {
+        $stream = fopen('php://temp', 'r+');
+        $loop = $this->createLoopMock();
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+
+        $conn = new DuplexResourceStream($stream, $loop);
+        $conn->resume();
+        $conn->resume();
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::close
+     */
+    public function testCloseRemovesReadStreamFromLoop()
+    {
+        $stream = fopen('php://temp', 'r+');
+        $loop = $this->createLoopMock();
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+        $loop->expects($this->once())->method('removeReadStream')->with($stream);
+
+        $conn = new DuplexResourceStream($stream, $loop);
+        $conn->close();
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::close
+     */
+    public function testCloseAfterPauseRemovesReadStreamFromLoopOnlyOnce()
+    {
+        $stream = fopen('php://temp', 'r+');
+        $loop = $this->createLoopMock();
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+        $loop->expects($this->once())->method('removeReadStream')->with($stream);
+
+        $conn = new DuplexResourceStream($stream, $loop);
+        $conn->pause();
+        $conn->close();
+    }
+
+    /**
+     * @covers React\Stream\DuplexResourceStream::close
+     */
+    public function testResumeAfterCloseDoesAddReadStreamToLoopOnlyOnce()
+    {
+        $stream = fopen('php://temp', 'r+');
+        $loop = $this->createLoopMock();
+        $loop->expects($this->once())->method('addReadStream')->with($stream);
+
+        $conn = new DuplexResourceStream($stream, $loop);
+        $conn->close();
+        $conn->resume();
     }
 
     public function testEndedStreamsShouldNotWrite()
