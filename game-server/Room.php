@@ -69,6 +69,8 @@ class Room extends Command
             'avatar' => empty($this->data['avatar']) ? '' : $this->data['avatar'],
         ];
         self::$roomList[$roomId]['last_update_time'] = time();
+        //connectId => roomId
+        self::$roomConnectMap[$connectionId] = $roomId;
 
         return $this->reply(RoomBroadcast::broadcast($roomId, 'enter_room'), Room::getConnections($roomId));
     }
@@ -233,6 +235,11 @@ class Room extends Command
         if (empty($this->data['room_id']) || !isset(self::$roomList[$this->data['room_id']])) {
             throw new \Exception("room not exists");
         }
+        //判断玩家是否在房间内
+        $mid = $this->getMid();
+        if (!isset(self::$roomList[$roomId]['connection_ids'][$mid])) {
+            throw new \Exception("not in room");
+        }
         return $this->data['room_id'];
     }
 
@@ -246,14 +253,12 @@ class Room extends Command
             'status' => 0,//房间状态
             'connection_ids' => [], //mid => connection_id
             'players_info' => [], //mid => array
-
             'ready_status' => [], //mid => 1
             'zhuang_status' => [], //mid => 1
             'game' => null,//游戏卡牌数据
             'zhuang' => null,//谁是庄，值是mid
             'create_time' => time(),//房间创建时间，
             'zhuang_calling' => [],//叫庄玩家的mid列表
-            'create_time' => time(),//房间创建时间
             'last_update_time' => time(),//房间最近操作时间
         ];
     }
@@ -395,7 +400,19 @@ class Room extends Command
                 break;
             case 20:
                 //开牌
+                self::$roomList[$roomId]['status'] = 30;//准备下一局
                 return [RoomBroadcast::broadcast($roomId, 'game_result'), Room::getConnections($roomId)];
+                break;
+            case 30:
+                //reset data
+                self::$roomList[$roomId]['status'] = 0;
+                self::$roomList[$roomId]['ready_status'] = [];
+                self::$roomList[$roomId]['zhuang_status'] = [];
+                self::$roomList[$roomId]['game'] = null;
+                self::$roomList[$roomId]['zhuang'] = null;
+                self::$roomList[$roomId]['zhuang_calling'] = [];
+                self::$roomList[$roomId]['last_update_time'] = time();
+                return [RoomBroadcast::broadcast($roomId, 'get_ready_status', ['game_status' => 30]), Room::getConnections($roomId)];
                 break;
             default:
                 //return [RoomBroadcast::broadcast($roomId, 'clock_wait_start'), Room::getConnections($roomId)];
