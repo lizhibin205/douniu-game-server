@@ -9,8 +9,8 @@ class Room extends Command
     const MAX_ROOM_PLAYER = 9;
     const ROOM_TOKEN      = 'token123#';
 
-    private static $roomList = [];
-    private static $roomConnectMap = [];//connectId => roomId
+    protected static $roomList = [];
+    protected static $roomConnectMap = [];//connectId => roomId
 
     /**
      * __construct
@@ -31,90 +31,46 @@ class Room extends Command
 
     /**
      * 创建房间
-     * done:ver1
+     * done:ver2
      * @throws \Exception
      * @return unknown[]|string[]
      */
     public function create()
     {
-        $roomId = $this->data['room_id'];
-        $mid = $this->getMid();
-        if (isset(self::$roomList[$roomId])) {
-            throw new \Exception("room exists!");
-        }
-        self::$roomList[$roomId] = [
-            'status' => 0,//房间状态
-            'connection_ids' => [], //mid => connection_id
-            'players_info' => [], //mid => array
-            'ready_status' => [], //mid => 1
-            'zhuang_status' => [], //mid => 1
-            'game' => null,//游戏卡牌数据
-            'zhuang' => null,//谁是庄，值是mid
-            'create_time' => time(),//房间创建时间，
-            'create_mid' => $mid,//创建房间的人
-            'zhuang_calling' => [],//叫庄玩家的mid列表
-            'create_time' => time(),//房间创建时间
-            'last_update_time' => time(),//房间最近操作时间
-            'max_time' => 0,//可玩的局数
-            'current_time' => 1,//当期局数
-        ];
-        self::$roomList[$roomId]['connection_ids'][$mid] = $this->getConnectId();
-        self::$roomList[$roomId]['players_info'][$mid] = [
-            'name' => empty($this->data['name']) ? '' : $this->data['name'],
-            'avatar' => empty($this->data['avatar']) ? '' : $this->data['avatar'],
-        ];
-        self::$roomList[$roomId]['max_time'] = empty($this->data['max_time']) ? 1 : intval($this->data['max_time']);
-        self::addMember($this->getConnectId(), $roomId);
-        return $this->reply([
-            'event' => 'create_room',
-            'create_mid' => self::$roomList[$roomId]['create_mid'],
-            'game_status' => self::$roomList[$roomId]['status'],
-            'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
-            'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-            'zhuang_mid' => self::$roomList[$roomId]['zhuang'],
-            'call_zhuang' => self::$roomList[$roomId]['zhuang_calling'],
-        ]);
+        //redirect to enter
+        $this->enter();
     }
 
     /**
      * 进入房间
-     * done:ver1
+     * done:ver2
      * @throws \Exceptions
      * @return unknown[]|string[]
      */
     public function enter()
     {
-        $roomId = $this->getRoomId();
+        $roomId = empty($this->data['room_id']) ? 0 : intval($this->data['room_id']);
+        if ($roomId <= 0) {
+            throw new \Exception("room id illegal format");
+        }
         $mid = $this->getMid();
         $connectionId = $this->getConnectId();
 
-        if (!isset(self::$roomList[$roomId]['connection_ids'][$mid])
-            && count(self::$roomList[$roomId]['connection_ids']) >= self::MAX_ROOM_PLAYER) {
-            throw new \Exception("room is full");
+        //如果房间不存在，则初始化它
+        if (!isset(self::$roomList[$roomId])) {
+            $this->createRoomData($roomId);
+            GameServer::getInstance()->addGlobalHandle($roomId, new GlobalHandle($roomId));
         }
-        //if (self::$roomList[$roomId]['status'] > 0) {
-        //    throw new \Exception("game is starting");
-        //}
 
+        //玩家加入房间
         self::$roomList[$roomId]['connection_ids'][$mid] = $connectionId;
         self::$roomList[$roomId]['players_info'][$mid] = [
             'name' => empty($this->data['name']) ? '' : $this->data['name'],
             'avatar' => empty($this->data['avatar']) ? '' : $this->data['avatar'],
         ];
         self::$roomList[$roomId]['last_update_time'] = time();
-        self::addMember($this->getConnectId(), $roomId);
-        return $this->reply([
-            'event' => 'enter_room',
-            'create_mid' => self::$roomList[$roomId]['create_mid'],
-            'game_status' => self::$roomList[$roomId]['status'],
-            'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
-            'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-            'zhuang_mid' => self::$roomList[$roomId]['zhuang'],
-            'call_zhuang' => self::$roomList[$roomId]['zhuang_calling'],
-            'result' => self::$roomList[$roomId]['status'] == 3 ? self::$roomList[$roomId]['game'] : null,
-        ], self::$roomList[$roomId]['connection_ids']);
+
+        return $this->reply(RoomBroadcast::broadcast($roomId, 'enter_room'), Room::getConnections($roomId));
     }
 
     /**
@@ -128,69 +84,40 @@ class Room extends Command
         $roomId = $this->getRoomId();
         $mid = $this->getMid();
 
-        if (!isset(self::$roomList[$roomId])) {
-            throw new \Exception("room exists!");
+        //玩家准备
+        if (self::$roomList[$roomId]['status'] > 0) {
+            //已经开始，不能准备
+            throw new \Exception("game is already started!");
         }
-
+        if (count(self::$roomList[$roomId]['ready_status']) >= self::MAX_ROOM_PLAYER) { 
+            throw new \Exception("player is full!");
+        }
         self::$roomList[$roomId]['ready_status'][$mid] = $this->getConnectId();
         self::$roomList[$roomId]['last_update_time'] = time();
-        return $this->reply([
-            'event' => 'get_ready_status',
-            'create_mid' => self::$roomList[$roomId]['create_mid'],
-            'game_status' => self::$roomList[$roomId]['status'],
-            'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
-            'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-            'zhuang_mid' => self::$roomList[$roomId]['zhuang'],
-        ], self::$roomList[$roomId]['connection_ids']);
+
+        return $this->reply(RoomBroadcast::broadcast($roomId, 'get_ready_status'), self::$roomList[$roomId]['connection_ids']);
     }
 
     /**
-     * 开始游戏（只有创建房间的人才可以）
-     * doen:ver1
-     * @throws \Exception
+     * 取消准备状态
+     * done:ver1
+     * @throws \Exceptions
      * @return unknown[]|string[]
      */
-    public function start()
+    public function no_ready()
     {
         $roomId = $this->getRoomId();
         $mid = $this->getMid();
-        if (!isset(self::$roomList[$roomId])) {
-            throw new \Exception('room not exists!');
-        }
-        $createMid = self::$roomList[$roomId]['create_mid'];
-        if ($createMid != $mid) {
-            throw new \Exception("you can't start game");
-        }
-        if (count(self::$roomList[$roomId]['connection_ids']) < self::MIN_ROOM_PLAYER) {
-            throw new \Exception("player less than " . self::MIN_ROOM_PLAYER);
-        }
 
-        if (count(self::$roomList[$roomId]['ready_status']) == count(self::$roomList[$roomId]['connection_ids'])) {
-            //所有人准备，开局
-            if (!is_null(self::$roomList[$roomId]['game'])) {
-                throw new \Exception('game already start');
-            }
-            $game = new Douniu();
-            $game->init(array_keys(self::$roomList[$roomId]['connection_ids']));
-            self::$roomList[$roomId]['status'] = 1;
-            self::$roomList[$roomId]['last_update_time'] = time();
-            self::$roomList[$roomId]['game'] = $game->getResult();
-            //设置叫庄计时器
-            GameServer::getInstance()->addZhuangHandle($roomId, new CallZhuangHandle(self::$roomList[$roomId]['connection_ids']));
-            //通知发牌
-            return $this->reply([
-                'event' => 'game_start',
-                'create_mid' => self::$roomList[$roomId]['create_mid'],
-                'game_status' => self::$roomList[$roomId]['status'],
-                'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
-                'players_info' => self::$roomList[$roomId]['players_info'],
-                'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-                'zhuang_mid' => self::$roomList[$roomId]['zhuang'],
-            ], self::$roomList[$roomId]['connection_ids']);
-        } else {
-            throw new \Exception("players isn't all ready");
+        //玩家取消准备
+        if (self::$roomList[$roomId]['status'] > 0) {
+            //已经开始，不能取消
+            throw new \Exception("game is already started!");
         }
+        unset(self::$roomList[$roomId]['ready_status'][$mid]);
+        self::$roomList[$roomId]['last_update_time'] = time();
+
+        return $this->reply(RoomBroadcast::broadcast($roomId, 'get_ready_status'), self::$roomList[$roomId]['connection_ids']);
     }
 
     /**
@@ -202,9 +129,7 @@ class Room extends Command
     {
         $roomId = $this->getRoomId();
         $mid = $this->getMid();
-        if (!isset(self::$roomList[$roomId])) {
-            throw new \Exception('room not exists!');
-        }
+
         if (is_null(self::$roomList[$roomId]['game'])) {
             throw new \Exception("game is not start");
         }
@@ -232,25 +157,16 @@ class Room extends Command
     {
         $roomId = $this->getRoomId();
         $mid = $this->getMid();
-        if (!isset(self::$roomList[$roomId])) {
-            throw new \Exception('room not exists!');
-        }
-        if (is_null(self::$roomList[$roomId]['game'])) {
-            throw new \Exception("game is not start");
+
+        if (self::$roomList[$roomId]['status'] != 10) {
+            throw new \Exception("you can't call zhuang");
         }
 
         if (!in_array($mid, self::$roomList[$roomId]['zhuang_calling'])) {
             self::$roomList[$roomId]['zhuang_calling'][] = $mid;
         }
 
-        return $this->reply([
-            'event' => 'call_zhuang',
-            'game_status' => self::$roomList[$roomId]['status'],
-            'call_zhuang' => self::$roomList[$roomId]['zhuang_calling'],
-            'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
-            'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-        ], self::$roomList[$roomId]['connection_ids']);
+        return $this->reply(RoomBroadcast::broadcast($roomId, 'call_zhuang'), Room::getConnections($roomId));
     }
 
     /**
@@ -354,7 +270,7 @@ class Room extends Command
 
     /**
      * 聊天广播
-     * done:ver1
+     * done:ver2
      * @throws \Exception
      * @return unknown[]|string[]
      */
@@ -365,11 +281,6 @@ class Room extends Command
         $chat = empty($this->data['chat']) ? '' : $this->data['chat'];
         $type = empty($this->data['type']) ? '' : $this->data['type'];
         $name = empty($this->data['name']) ? '' : $this->data['name'];
-
-        if (!isset(self::$roomList[$roomId])) {
-            throw new \Exception("room exists!");
-        }
-
         self::$roomList[$roomId]['last_update_time'] = time();
 
         return $this->reply([
@@ -380,8 +291,7 @@ class Room extends Command
             'name' => $name,
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
             'players_info' => self::$roomList[$roomId]['players_info'],
-            'ready_mid' => array_keys(self::$roomList[$roomId]['ready_status']),
-        ], self::$roomList[$roomId]['connection_ids']);
+        ], Room::getConnections($roomId));
     }
 
     /**
@@ -395,6 +305,28 @@ class Room extends Command
             throw new \Exception("room not exists");
         }
         return $this->data['room_id'];
+    }
+
+    /**
+     * 初始化房间数据
+     * @param unknown $roomId
+     */
+    private function createRoomData($roomId)
+    {
+        self::$roomList[$roomId] = [
+            'status' => 0,//房间状态
+            'connection_ids' => [], //mid => connection_id
+            'players_info' => [], //mid => array
+
+            'ready_status' => [], //mid => 1
+            'zhuang_status' => [], //mid => 1
+            'game' => null,//游戏卡牌数据
+            'zhuang' => null,//谁是庄，值是mid
+            'create_time' => time(),//房间创建时间，
+            'zhuang_calling' => [],//叫庄玩家的mid列表
+            'create_time' => time(),//房间创建时间
+            'last_update_time' => time(),//房间最近操作时间
+        ];
     }
 
     /**
@@ -489,15 +421,52 @@ class Room extends Command
         $request->end($postData);
     }
 
-    public static function addMember($connectId, $roomId)
+    /**
+     * 计时器使用
+     * @param unknown $roomId
+     * @return NULL[]
+     */
+    public static function returnStatus($roomId)
     {
-        self::$roomConnectMap[$connectId] = $roomId;
-    }
-    public static function removeMid($connectId)
-    {
-        if (isset(self::$roomConnectMap[$connectId])) {
-            
-            unset(self::$roomConnectMap[$connectId]);
+        $gameStatus = intval(self::$roomList[$roomId]['status']);
+        switch ($gameStatus) {
+            case 0:
+                //准备游戏阶段，如果准备玩家大于等于MIN_ROOM_PLAYER，且在5s之后，自动进入下status=10
+                if (count(self::$roomList[$roomId]['ready_status']) >= self::MIN_ROOM_PLAYER) {
+                    if (!isset(self::$roomList[$roomId]['ready_start_time'])) {
+                        self::$roomList[$roomId][ready_start_time] = time();
+                    }
+                    if (time() - self::$roomList[$roomId]['ready_start_time'] > 5) {
+                        self::$roomList[$roomId]['status'] = 10;//开牌了
+                        $game = new Douniu();
+                        $game->init(array_keys(self::$roomList[$roomId]['ready_status']));
+                        self::$roomList[$roomId]['game'] = $game->getResult();
+                        self::$roomList[$roomId]['last_update_time'] = time();
+                        return [RoomBroadcast::broadcast($roomId, 'game_start'), Room::getConnections($roomId)];
+                    }
+                } else {
+                    return [null, null];
+                }
+                break;
+            case 10:
+                //叫鸡阶段
+                if (!isset(self::$roomList[$roomId]['call_zhuang_start_time'])) {
+                    self::$roomList[$roomId]['call_zhuang_start_time'] = time();
+                }
+                $passTime = time() - self::$roomList[$roomId]['call_zhuang_start_time'];
+                if ($passTime <= 10) {
+                    //叫庄到计时间
+                    return [RoomBroadcast::broadcast($roomId, 'wait_call_zhuang', [
+                        'timeout' => 10 - $passTime
+                    ]), Room::getConnections($roomId)];
+                } else {
+                    //叫庄结束
+                    
+                }
+                break;
+            default:
+                //return [RoomBroadcast::broadcast($roomId, 'clock_wait_start'), Room::getConnections($roomId)];
+                return [null, null];
         }
     }
 }

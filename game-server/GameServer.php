@@ -9,6 +9,7 @@ class GameServer
     private static $gameServer = null;
     private $connectionList = [];
     private $zhuangHandleList = [];
+    private $globalHandleList = [];
     private function __construct(){}
     public static function getInstance()
     {
@@ -52,26 +53,29 @@ class GameServer
     {
     }
 
-    //叫庄处理
-    public function startZhuangTimer()
+    //全局游戏计时器
+    public function startGlobalTimer()
     {
-        Timer::add(1, [$this, 'doZhuangHandle']);
+        Timer::add(1, [$this, 'doGlobalHandle']);
     }
-    public function addZhuangHandle($handleKey, $handle)
+    public function addGlobalHandle($handleKey, $handle)
     {
-        $this->zhuangHandleList[$handleKey] = $handle;
+        $this->globalHandleList[$handleKey] = $handle;
     }
-    public function removeZhuangHandle($handleKey)
+    public function removeGlobalHandle($handleKey)
     {
-        unset($this->zhuangHandleList[$handleKey]);
+        unset($this->globalHandleList[$handleKey]);
     }
-    public function doZhuangHandle()
+    public function doGlobalHandle()
     {
-        foreach ($this->zhuangHandleList as $handleKey => $handle) {
+        foreach ($this->globalHandleList as $handleKey => $handle) {
             try {
-                list($connectionIds, $return) = $handle->doResult($handleKey);
+                list($return, $connectionIds) = $handle->doResult($handleKey);
+                if (is_null($return)) {
+                    continue;
+                }
             } catch (\Exception $ex) {
-                $this->removeZhuangHandle($handleKey);
+                $this->removeGlobalHandle($handleKey);
                 continue;
             }
             foreach ($connectionIds as $cid) {
@@ -81,17 +85,7 @@ class GameServer
             }
         }
     }
-    //叫庄处理结束
-    //gc处理
-    public function startGcTimer()
-    {
-        Timer::add(300, [$this, 'doGcHandle']);
-    }
-    public function doGcHandle()
-    {
-        Room::gc();
-    }
-    //gc结束
+    //全局游戏计时器结束
 
     protected function callCommand($connection, $command, $action, $data)
     {

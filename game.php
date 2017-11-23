@@ -20,7 +20,7 @@ $websocketWorker->count = 1;
 //on-onWorkerStart 
 $websocketWorker->onWorkerStart = function ($worker) use ($gameServer)
 {
-    $gameServer->startZhuangTimer();
+    $gameServer->startGlobalTimer();
     HttpHelper::getInstance()->init();
 };
 
