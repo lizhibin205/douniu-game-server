@@ -383,15 +383,16 @@ class Room extends Command
                 }
                 break;
             case 10:
+                $callZhuangTime = 120;
                 //叫鸡阶段
                 if (!isset(self::$roomList[$roomId]['call_zhuang_start_time'])) {
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
                 }
                 $passTime = time() - self::$roomList[$roomId]['call_zhuang_start_time'];
-                if ($passTime < 10) {
+                if ($passTime < $callZhuangTime && count(self::$roomList[$roomId]['zhuang_calling']) < count(self::$roomList[$roomId]['ready_status'])) {
                     //叫庄到计时间
                     return [RoomBroadcast::broadcast($roomId, 'wait_call_zhuang', [
-                        'timeout' => 10 - $passTime
+                        'timeout' => $callZhuangTime - $passTime
                     ]), Room::getConnections($roomId)];
                 } else {
                     //叫庄结束result_zhuang
