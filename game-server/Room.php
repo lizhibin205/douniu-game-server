@@ -406,6 +406,14 @@ class Room extends Command
                 return [RoomBroadcast::broadcast($roomId, 'game_result', ['result' => self::$roomList[$roomId]['game']]), Room::getConnections($roomId)];
                 break;
             case 30:
+                $showResultTime = 4;
+                if (!isset(self::$roomList[$roomId]['show_result_time']) || is_null(self::$roomList[$roomId]['show_result_time'])) {
+                    self::$roomList[$roomId]['show_result_time'] = time();
+                }
+                $passTime = time() - self::$roomList[$roomId]['show_result_time'];
+                if ($passTime < $showResultTime) {
+                    return [null, null];
+                }
                 //reset data
                 self::$roomList[$roomId]['status'] = 0;
                 self::$roomList[$roomId]['ready_status'] = [];
@@ -415,6 +423,7 @@ class Room extends Command
                 self::$roomList[$roomId]['call_zhuang_start_time'] = null;
                 self::$roomList[$roomId]['zhuang_calling'] = [];
                 self::$roomList[$roomId]['last_update_time'] = time();
+                self::$roomList[$roomId]['show_result_time'] = null;
                 return [RoomBroadcast::broadcast($roomId, 'get_ready_status', ['game_status' => 30]), Room::getConnections($roomId)];
                 break;
             default:
