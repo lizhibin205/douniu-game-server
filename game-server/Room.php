@@ -406,7 +406,7 @@ class Room extends Command
                 return [RoomBroadcast::broadcast($roomId, 'game_result', ['result' => self::$roomList[$roomId]['game']]), Room::getConnections($roomId)];
                 break;
             case 30:
-                $showResultTime = 4;
+                $showResultTime = 10;
                 if (!isset(self::$roomList[$roomId]['show_result_time']) || is_null(self::$roomList[$roomId]['show_result_time'])) {
                     self::$roomList[$roomId]['show_result_time'] = time();
                 }
