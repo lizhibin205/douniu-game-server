@@ -140,7 +140,6 @@ class Room extends Command
         $preCards = array_slice($gameResult['players'][$mid]['cards'], 0, 4);
         return $this->reply([
             'event' => 'get_pre_card',
-            'create_mid' => self::$roomList[$roomId]['create_mid'],
             'call_zhuang' => self::$roomList[$roomId]['zhuang_calling'],
             'game_status' => self::$roomList[$roomId]['status'],
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
