@@ -222,6 +222,7 @@ class Room extends Command
             'name' => $name,
             'players' => array_keys(self::$roomList[$roomId]['connection_ids']),
             'players_info' => self::$roomList[$roomId]['players_info'],
+            'ready_mid' => array_keys($data['ready_status']),
         ], Room::getConnections($roomId));
     }
 
