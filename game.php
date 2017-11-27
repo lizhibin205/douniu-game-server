@@ -37,6 +37,7 @@ $websocketWorker->onMessage = function($connection, $data) use($gameServer) {
 //on-close
 $websocketWorker->onClose = function($connection) use($gameServer) {
     $gameServer->onClose($connection);
+    BGameServer\Douniu\Room::gc($connection->id);
 };
 
 //on-error

@@ -49,12 +49,12 @@ class Room extends Command
      */
     public function enter()
     {
-        $roomId = empty($this->data['room_id']) ? 0 : intval($this->data['room_id']);
+        $connectionId = $this->getConnectId();
+        $roomId = self::decideRoomId($connectionId);
         if ($roomId <= 0) {
             throw new \Exception("room id illegal format");
         }
         $mid = $this->getMid();
-        $connectionId = $this->getConnectId();
 
         //如果房间不存在，则初始化它
         if (!isset(self::$roomList[$roomId])) {
@@ -232,16 +232,12 @@ class Room extends Command
      */
     private function getRoomId()
     {
-        if (empty($this->data['room_id']) || !isset(self::$roomList[$this->data['room_id']])) {
-            throw new \Exception("room not exists");
+        $connectId = $this->getConnectId();
+        if (!isset(self::$roomConnectMap[$connectId])) {
+            throw new \Exception("player is not in room");
         }
-        //判断玩家是否在房间内
-        $mid = $this->getMid();
-        $roomId = empty($this->data['room_id']) ? -1 : $this->data['room_id'];
-        if ($roomId == -1 || !isset(self::$roomList[$roomId]['connection_ids'][$mid])) {
-            throw new \Exception("not in room");
-        }
-        return $roomId;
+
+        return self::$roomConnectMap[$connectId];
     }
 
     /**
@@ -262,6 +258,23 @@ class Room extends Command
             'zhuang_calling' => [],//叫庄玩家的mid列表
             'last_update_time' => time(),//房间最近操作时间
         ];
+    }
+
+    /**
+     * 决定玩家进入哪个房间
+     * @param int $connectId 连接ID
+     * @return int $roomId
+     */
+    public static function decideRoomId($connectId)
+    {
+        //先遍历房间是不是有空位
+        foreach (self::$roomList as $roomId => $roomInfo) {
+            if (count($roomInfo['connection_ids']) < self::MAX_ROOM_PLAYER) {
+                return $roomId;
+            }
+        }
+        //没有的话，返回新的房间ID
+        return time();
     }
 
     /**
@@ -306,14 +319,16 @@ class Room extends Command
      * 回收Room内存数据
      * return void
      */
-    public static function gc()
+    public static function gc($connectId)
     {
-        $now = time();
-        //回收6小时前创建的房间
-        foreach (self::$roomList as $roomKey => $room) {
-            //清空死房间
-            if ($now - $room['last_update_time'] > 3600 * 6) {
-                unset(self::$roomList[$roomKey]);
+        if (isset(self::$roomConnectMap[$connectId])) {
+            $roomId = self::$roomConnectMap[$connectId];
+            unset(self::$roomConnectMap[$connectId]);
+            //删除游戏内的connect_id
+            //unset(self::$roomList[$roomId]['connection_ids'][$mid]);
+            $key = array_search($connectId, self::$roomList[$roomId]['connection_ids']);
+            if ($key !== false) {
+                unset(self::$roomList[$roomId]['connection_ids'][$key]);
             }
         }
     }
@@ -378,6 +393,11 @@ class Room extends Command
                         return [RoomBroadcast::broadcast($roomId, 'game_start'), Room::getConnections($roomId)];
                     }
                 } else {
+                    //如果无连接，回收
+                    if (count(self::$roomList[$roomId]['connection_ids']) == 0) {
+                        GameServer::getInstance()->removeGlobalHandle($roomId);
+                        unset(self::$roomList[$roomId]);
+                    }
                     return [null, null];
                 }
                 break;
