@@ -237,10 +237,11 @@ class Room extends Command
         }
         //判断玩家是否在房间内
         $mid = $this->getMid();
-        if (!isset(self::$roomList[$roomId]['connection_ids'][$mid])) {
+        $roomId = empty($this->data['room_id']) ? -1 : $this->data['room_id'];
+        if ($roomId == -1 || !isset(self::$roomList[$roomId]['connection_ids'][$mid])) {
             throw new \Exception("not in room");
         }
-        return $this->data['room_id'];
+        return $roomId;
     }
 
     /**
