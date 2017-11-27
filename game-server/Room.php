@@ -384,11 +384,10 @@ class Room extends Command
             case 10:
                 $callZhuangTime = 120;
                 //叫鸡阶段
-                if (!isset(self::$roomList[$roomId]['call_zhuang_start_time'])) {
+                if (!isset(self::$roomList[$roomId]['call_zhuang_start_time']) || is_null(self::$roomList[$roomId]['call_zhuang_start_time'])) {
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
                 }
                 $passTime = time() - self::$roomList[$roomId]['call_zhuang_start_time'];
-                echo count(self::$roomList[$roomId]['ready_status']) - count(self::$roomList[$roomId]['zhuang_calling']),PHP_EOL;
                 if ($passTime < $callZhuangTime && count(self::$roomList[$roomId]['zhuang_calling']) < count(self::$roomList[$roomId]['ready_status'])) {
                     //叫庄到计时间
                     return [RoomBroadcast::broadcast($roomId, 'wait_call_zhuang', [
@@ -413,6 +412,7 @@ class Room extends Command
                 self::$roomList[$roomId]['zhuang_status'] = [];
                 self::$roomList[$roomId]['game'] = null;
                 self::$roomList[$roomId]['zhuang'] = null;
+                self::$roomList[$roomId]['call_zhuang_start_time'] = null;
                 self::$roomList[$roomId]['zhuang_calling'] = [];
                 self::$roomList[$roomId]['last_update_time'] = time();
                 return [RoomBroadcast::broadcast($roomId, 'get_ready_status', ['game_status' => 30]), Room::getConnections($roomId)];
