@@ -388,6 +388,7 @@ class Room extends Command
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
                 }
                 $passTime = time() - self::$roomList[$roomId]['call_zhuang_start_time'];
+                echo count(self::$roomList[$roomId]['ready_status']) - count(self::$roomList[$roomId]['zhuang_calling']),PHP_EOL;
                 if ($passTime < $callZhuangTime && count(self::$roomList[$roomId]['zhuang_calling']) < count(self::$roomList[$roomId]['ready_status'])) {
                     //叫庄到计时间
                     return [RoomBroadcast::broadcast($roomId, 'wait_call_zhuang', [
