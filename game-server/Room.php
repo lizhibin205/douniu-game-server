@@ -382,7 +382,7 @@ class Room extends Command
                 }
                 break;
             case 10:
-                $callZhuangTime = 120;
+                $callZhuangTime = 10;
                 //叫鸡阶段
                 if (!isset(self::$roomList[$roomId]['call_zhuang_start_time']) || is_null(self::$roomList[$roomId]['call_zhuang_start_time'])) {
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
@@ -406,7 +406,7 @@ class Room extends Command
                 return [RoomBroadcast::broadcast($roomId, 'game_result', ['result' => self::$roomList[$roomId]['game']]), Room::getConnections($roomId)];
                 break;
             case 30:
-                $showResultTime = 10;
+                $showResultTime = 4;
                 if (!isset(self::$roomList[$roomId]['show_result_time']) || is_null(self::$roomList[$roomId]['show_result_time'])) {
                     self::$roomList[$roomId]['show_result_time'] = time();
                 }
