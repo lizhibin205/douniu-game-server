@@ -14,7 +14,6 @@ class RoomBroadcast extends Room
             'ready_mid' => array_keys($data['ready_status']),
             'zhuang_mid' => $data['zhuang'],
             'call_zhuang' => $data['zhuang_calling'],
-            'result' => $data['status'] == 20 ? $data['game'] : null,
         ], $otherMessage);
     }
 }

@@ -403,7 +403,7 @@ class Room extends Command
             case 20:
                 //开牌
                 self::$roomList[$roomId]['status'] = 30;//准备下一局
-                return [RoomBroadcast::broadcast($roomId, 'game_result'), Room::getConnections($roomId)];
+                return [RoomBroadcast::broadcast($roomId, 'game_result', ['result' => self::$roomList[$roomId]['game']]), Room::getConnections($roomId)];
                 break;
             case 30:
                 //reset data
