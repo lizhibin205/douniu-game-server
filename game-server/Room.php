@@ -438,7 +438,7 @@ class Room extends Command
                 }
                 break;
             case 10:
-                $callZhuangTime = 360;
+                $callZhuangTime = 10;
                 //叫鸡阶段call_zhuang_start_time
                 if (!isset(self::$roomList[$roomId]['call_zhuang_start_time']) || is_null(self::$roomList[$roomId]['call_zhuang_start_time'])) {
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
@@ -458,12 +458,12 @@ class Room extends Command
                 break;
             case 11:
                 //非庄加倍阶段call_multiple_start_time
-                $jiabeiTime = 360;
+                $jiabeiTime = 10;
                 if (!isset(self::$roomList[$roomId]['call_multiple_start_time']) || is_null(self::$roomList[$roomId]['call_multiple_start_time'])) {
                     self::$roomList[$roomId]['call_multiple_start_time'] = time();
                 }
                 $passTime = time() - self::$roomList[$roomId]['call_multiple_start_time'];
-                if ($passTime < $jiabeiTime && count(self::$roomList[$roomId]['not_zhuang_calling_multiple']) < count(self::$roomList[$roomId]['ready_status'])) {
+                if ($passTime < $jiabeiTime && count(self::$roomList[$roomId]['not_zhuang_calling_multiple']) < count(self::$roomList[$roomId]['ready_status']) - 1) {
                     //非庄加倍
                     return [RoomBroadcast::broadcast($roomId, 'wait_call_multiple', [
                         'timeout' => $jiabeiTime - $passTime
