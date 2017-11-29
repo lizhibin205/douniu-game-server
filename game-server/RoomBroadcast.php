@@ -13,7 +13,10 @@ class RoomBroadcast extends Room
             'players_info' => $data['players_info'],
             'ready_mid' => array_keys($data['ready_status']),
             'zhuang_mid' => $data['zhuang'],
+            'multiple' => $data['multiple'],
             'call_zhuang' => $data['zhuang_calling'],
+            'zhuang_calling_multiple' => $data['zhuang_calling_multiple'],
+            'not_zhuang_calling_multiple' => $data['not_zhuang_calling_multiple'],
         ], $otherMessage);
     }
 }

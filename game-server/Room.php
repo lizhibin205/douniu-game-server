@@ -165,9 +165,33 @@ class Room extends Command
 
         if (!in_array($mid, self::$roomList[$roomId]['zhuang_calling'])) {
             self::$roomList[$roomId]['zhuang_calling'][] = $mid;
+            self::$roomList[$roomId]['zhuang_calling_multiple'][$mid] = !empty($this->data['multiple']) && in_array($this->data['multiple'], [1, 2, 3]) ? $this->data['multiple'] : 1;
         }
 
         return $this->reply(RoomBroadcast::broadcast($roomId, 'call_zhuang'), Room::getConnections($roomId));
+    }
+
+    /**
+     * 非庄家加倍
+     * @throws \Exception
+     * @return unknown[]|string[]
+     */
+    public function call_multiple()
+    {
+        $roomId = $this->getRoomId();
+        $mid = $this->getMid();
+
+        if (self::$roomList[$roomId]['status'] != 11) {
+            throw new \Exception("you can't call multiple");
+        }
+        //如果是庄，则不能加这个倍
+        if ($mid == self::$roomList[$roomId]['zhuang']) {
+            throw new \Exception("you can't call multiple");
+        }
+
+        $multiple = !empty($this->data['multiple']) && in_array($this->data['multiple'], [1, 2, 3]) ? $this->data['multiple'] : 1;
+        self::$roomList[$roomId]['not_zhuang_calling_multiple'][$mid] = $multiple;
+        return $this->reply(RoomBroadcast::broadcast($roomId, 'call_multiple'), Room::getConnections($roomId));
     }
 
     /**
@@ -256,6 +280,8 @@ class Room extends Command
             'zhuang' => null,//谁是庄，值是mid
             'create_time' => time(),//房间创建时间，
             'zhuang_calling' => [],//叫庄玩家的mid列表
+            'zhuang_calling_multiple' => [], //玩家的倍数mid => multiple
+            'not_zhuang_calling_multiple' => [], //玩家的倍数mid => multiple
             'last_update_time' => time(),//房间最近操作时间
         ];
     }
@@ -279,7 +305,7 @@ class Room extends Command
 
     /**
      * 决定谁是庄
-     * @param unknown $roomId
+     * @param int $roomId
      * @return void;
      */
     public static function decideZhuang($roomId)
@@ -299,6 +325,16 @@ class Room extends Command
         $random = mt_rand(0, count($players) - 1);
         self::$roomList[$roomId]['zhuang'] = $players[$random];
         return self::$roomList[$roomId]['zhuang'];
+    }
+
+    /**
+     * 整理非庄玩家的倍数
+     * @param int $roomId
+     * @return void
+     */
+    public static function decideMultiple($roomId)
+    {
+        
     }
 
     /**
@@ -402,8 +438,8 @@ class Room extends Command
                 }
                 break;
             case 10:
-                $callZhuangTime = 10;
-                //叫鸡阶段
+                $callZhuangTime = 360;
+                //叫鸡阶段call_zhuang_start_time
                 if (!isset(self::$roomList[$roomId]['call_zhuang_start_time']) || is_null(self::$roomList[$roomId]['call_zhuang_start_time'])) {
                     self::$roomList[$roomId]['call_zhuang_start_time'] = time();
                 }
@@ -416,8 +452,26 @@ class Room extends Command
                 } else {
                     //叫庄结束result_zhuang
                     $zhuangMid = Room::decideZhuang($roomId);
-                    self::$roomList[$roomId]['status'] = 20;//开牌拉
+                    self::$roomList[$roomId]['status'] = 11;//开牌拉
                     return [RoomBroadcast::broadcast($roomId, 'result_zhuang'), Room::getConnections($roomId)];
+                }
+                break;
+            case 11:
+                //非庄加倍阶段call_multiple_start_time
+                $jiabeiTime = 360;
+                if (!isset(self::$roomList[$roomId]['call_multiple_start_time']) || is_null(self::$roomList[$roomId]['call_multiple_start_time'])) {
+                    self::$roomList[$roomId]['call_multiple_start_time'] = time();
+                }
+                $passTime = time() - self::$roomList[$roomId]['call_multiple_start_time'];
+                if ($passTime < $jiabeiTime && count(self::$roomList[$roomId]['not_zhuang_calling_multiple']) < count(self::$roomList[$roomId]['ready_status'])) {
+                    //非庄加倍
+                    return [RoomBroadcast::broadcast($roomId, 'wait_call_multiple', [
+                        'timeout' => $jiabeiTime - $passTime
+                    ]), Room::getConnections($roomId)];
+                } else {
+                    //非庄加倍结束
+                    $zhuangMid = Room::decideZhuang($roomId);
+                    self::$roomList[$roomId]['status'] = 20;//开牌拉
                 }
                 break;
             case 20:
@@ -441,10 +495,13 @@ class Room extends Command
                 self::$roomList[$roomId]['game'] = null;
                 self::$roomList[$roomId]['zhuang'] = null;
                 self::$roomList[$roomId]['call_zhuang_start_time'] = null;
+                self::$roomList[$roomId]['call_multiple_start_time'] = null;
                 self::$roomList[$roomId]['zhuang_calling'] = [];
+                self::$roomList[$roomId]['zhuang_calling_multiple'] = [];
+                self::$roomList[$roomId]['not_zhuang_calling_multiple'] = [];
                 self::$roomList[$roomId]['last_update_time'] = time();
                 self::$roomList[$roomId]['show_result_time'] = null;
-                return [RoomBroadcast::broadcast($roomId, 'get_ready_status', ['game_status' => 30]), Room::getConnections($roomId)];
+                return [RoomBroadcast::broadcast($roomId, 'get_ready_status'), Room::getConnections($roomId)];
                 break;
             default:
                 //return [RoomBroadcast::broadcast($roomId, 'clock_wait_start'), Room::getConnections($roomId)];
